@@ -10,8 +10,8 @@
 ## 📋 Quick Status
 
 **Last Updated:** 2025-01-XX  
-**Current Task:** Week 1 Complete ✅ (Post-completion improvements)  
-**Next Up:** Week 2 - Audio Integration (Day 4: Audio Recording)
+**Current Task:** Week 2 Day 4 Complete ✅  
+**Next Up:** Week 2 - Audio Integration (Day 5: Audio Playback + Memory Profiling)
 
 **Week 1 Status:** ✅ COMPLETE (Audio latency test deferred to Week 2 Day 4 for realistic pipeline testing)
 
@@ -203,14 +203,76 @@
 
 ---
 
-## Week 2: Audio Integration (Status: NOT STARTED)
+## Week 2: Audio Integration (Status: IN PROGRESS)
 
-### ⏸️ Day 4: Audio Recording
-- [ ] Tasks TBD when Week 1 complete
-- [ ] **Audio Latency Test:** Measure end-to-end latency (mic → orchestrator → TTS → speakers) during voice pipeline integration
+### ✅ Day 4: Audio Recording (Status: ✅ COMPLETED)
+- [x] Update pubspec.yaml with `record` package (^5.1.2) and `permission_handler` (^11.3.0)
+- [x] Create `AudioRecordingService` for microphone recording with streaming
+  - Handles microphone permissions (Windows, mobile)
+  - Streams audio chunks in real-time (16kHz mono PCM)
+  - Calculates microphone level for visual feedback
+  - Integrates with WebSocket service
+- [x] Create `AudioWebSocketService` for voice mode WebSocket connection
+  - Handles audio messages, transcriptions, streaming text
+  - Receives binary audio chunks from TTS
+  - Manages session_id sharing with text mode
+  - Automatic reconnection with exponential backoff
+- [x] Add `audioConnectionProvider` to connection_provider.dart
+- [x] Create `RecordingProvider` for UI state management (recording status, microphone level, permissions)
+- [x] Create `VoiceScreen` with recording UI and microphone level indicator
+  - Start/Stop recording controls
+  - Real-time microphone level visualization
+  - Connection status indicator
+  - Message display (shared conversation history)
+  - Error handling and permission feedback
+- [x] Update HomeScreen to include Voice Chat button
+- [x] **Audio Latency Test:** Deferred to Day 4 implementation testing (will measure actual pipeline latency)
 
-### ⏸️ Day 5: Audio Playback + Memory Profiling
-- [ ] Tasks TBD
+**Completion Notes:**
+- ✅ Added `record` package for low-latency audio recording (16kHz mono PCM)
+- ✅ Added `permission_handler` for cross-platform microphone permissions
+- ✅ Created complete audio recording pipeline: microphone → streaming → WebSocket → orchestrator
+- ✅ Audio chunks sent as base64-encoded JSON messages (matching orchestrator protocol)
+- ✅ Microphone level calculated from PCM data (RMS) for real-time visual feedback
+- ✅ Voice mode shares conversation history with text mode via shared session_id
+- ✅ Audio WebSocket connects independently from text WebSocket (dual-connection architecture)
+- ✅ UI shows recording state, microphone levels, and connection status
+- ✅ All providers properly integrated with Riverpod
+- **Protocol Note:** Audio sent as `{"type": "audio", "data": "base64..."}` with `{"type": "final"}` when complete
+- **Bug Fix:** Corrected AudioEncoder enum value from `pcm16bit` to `pcm16bits` (record package v5.2.1 uses `pcm16bits`)
+- **Timestamp:** 2025-01-XX (Day 4 completed)
+
+### 🔄 Day 5: Audio Playback + Memory Profiling (Status: IN PROGRESS)
+- [x] Fix audio playback service - resolve choppy playback and file locking issues
+  - **Issues Found:**
+    - Multiple simultaneous playback calls creating file conflicts
+    - File cleanup happening while files still in use by audio player
+    - No proper queuing system - files played as soon as available causing race conditions
+    - Timer triggering multiple playbacks simultaneously
+    - Multiple completion listeners being registered (one per file) causing conflicts
+  - **Solution Implemented:**
+    - Implemented proper file queue system - files played sequentially, not simultaneously
+    - Single completion listener registered once in constructor (not per file)
+    - Added delay before file deletion to ensure player has released the file
+    - Separated state flags: `_isPlaying` and `_isProcessingQueue` for better state management
+    - Proper timer management with cancellation
+    - Better error handling with file cleanup retries
+  - **Timestamp:** 2025-01-XX
+- [x] Optimize streaming buffering to reduce choppy playback
+  - **Streaming Analysis:**
+    - Server side: TRUE streaming (LLM → TTS → Client binary chunks immediately)
+    - Client side: Batching required (audioplayers needs WAV files, not raw PCM)
+    - Old Python client used `sd.OutputStream.write()` for raw PCM streaming
+    - Current Flutter client batches chunks into WAV files (creates gaps)
+  - **Optimizations:**
+    - Reduced initial buffer from 16384 bytes (~0.34s) to 4096 bytes (~0.085s) for faster start
+    - Reduced batch size to 8192 bytes (~0.17s) - smaller files = less gaps
+    - More aggressive processing: start processing with 2 chunks even if below threshold
+    - Faster timer checks: 50ms instead of 150ms for more responsive processing
+    - Process smaller batches more frequently to maintain smoother playback
+  - **Timestamp:** 2025-01-XX
+- [ ] Test audio playback with multiple conversation turns
+- [ ] Memory profiling and leak detection
 
 ### ⏸️ Day 6: VAD Integration
 - [ ] Tasks TBD

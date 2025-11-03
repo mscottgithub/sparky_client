@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sparky_client/screens/chat_screen.dart';
 import 'package:sparky_client/screens/audio_test_screen.dart';
+import 'package:sparky_client/screens/voice_screen.dart';
 import 'package:sparky_client/providers/theme_provider.dart';
 import 'package:sparky_client/app_colors.dart';
 
@@ -43,20 +44,21 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: ColoredBox(
-              color: AppColors.paleGreen, // Pale Green #78C778
-              child: Container(
-                padding: const EdgeInsets.all(32.0),
-                decoration: BoxDecoration(
-                  color: AppColors.paleGreen, // Pale Green #78C778 background
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: ColoredBox(
+                color: AppColors.paleGreen, // Pale Green #78C778
+                child: Container(
+                  padding: const EdgeInsets.all(32.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleGreen, // Pale Green #78C778 background
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                     const Icon(
                       Icons.mic,
                       size: 80,
@@ -72,7 +74,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Week 1 - Day 3 Complete',
+                      'Week 2 - Day 4: Audio Recording',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
@@ -92,6 +94,29 @@ class HomeScreen extends ConsumerWidget {
                         },
                         icon: const Icon(Icons.chat),
                         label: const Text('Text Chat'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          textStyle: const TextStyle(fontSize: 18),
+                          backgroundColor: AppColors.paleGreen, // Pale Green #78C778
+                          foregroundColor: Colors.green.shade900,
+                          elevation: 0, // Remove Material elevation shadow
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: 250,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const VoiceScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.mic),
+                        label: const Text('Voice Chat'),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           textStyle: const TextStyle(fontSize: 18),
@@ -142,6 +167,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                             SizedBox(height: 8),
                             Text('• Text chat with Sparky AI'),
+                            Text('• Voice chat with audio recording'),
                             Text('• Real-time message streaming'),
                             Text('• Desktop UX (right-click, shortcuts)'),
                             Text('• Audio latency validation'),
@@ -150,12 +176,13 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+                ), // Close Column
+              ), // Close Container
+            ), // Close inner ColoredBox
+          ), // Close Padding
+        ), // Close SingleChildScrollView
+      ), // Close Center
+    ), // Close Scaffold
+    ); // Close outer ColoredBox
   }
 }

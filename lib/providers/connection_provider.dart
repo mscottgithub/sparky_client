@@ -22,3 +22,9 @@ final textConnectionProvider =
   return ConnectionNotifier();
 });
 
+/// Connection status provider for audio WebSocket
+final audioConnectionProvider =
+    StateNotifierProvider<ConnectionNotifier, ConnectionStatus>((ref) {
+  return ConnectionNotifier();
+});
+

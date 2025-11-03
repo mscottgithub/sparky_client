@@ -49,8 +49,14 @@ dependencies:
   intl: ^0.19.0
 
   # Audio I/O (for latency test and Week 2)
-  flutter_sound: ^9.2.13        # Audio recording and playback (Windows compatible)
+  record: ^5.2.1                 # Audio recording (low latency, Week 2 Day 4)
+  just_audio: ^0.9.36           # Audio playback (iOS, Android, macOS, Linux, Web)
+  audioplayers: ^6.0.0          # Audio playback for Windows (just_audio doesn't support Windows)
+  permission_handler: ^11.3.0    # Microphone permissions (Windows, mobile)
   path_provider: ^2.1.0         # Temp file paths
+
+dependency_overrides:
+  record_linux: ^1.2.1          # Override to fix build issue on Windows
 
 dev_dependencies:
   flutter_test:
