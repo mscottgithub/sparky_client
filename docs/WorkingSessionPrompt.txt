@@ -1,0 +1,19 @@
+I'm working on the Sparky Flutter client following 
+docs/FLUTTER_MIGRATION_PLAN_v1_1.md
+
+RULES FOR THIS SESSION:
+1. Read docs/PROGRESS.md to see what's already done
+2. Read docs/FLUTTER_MIGRATION_PLAN_v1_1.md to see what's next
+3. For reference make sure and read docs/FLUTTER_MIGRATION_PLAN_v1_1_RIVERPOD.md and docs/FLUTTER_RIVERPOD_ARCHITECTURE_HANDOFF.md for details.
+4. Note that, for your reference, the docs folder contains the server orchestration code (python file sparky_orchestrator_ws.py) and the old client (sparky_tray_client.py).  Reference this to help understand how things previously worked.
+5. Please note that I have added the .env file to the docs folder for your review as it has a lot of important information about the environment.
+6. After completing EACH task, update docs/PROGRESS.md with:
+   - [x] Task name
+   - Brief note of what was done
+   - Current timestamp
+7. Always tell me what you're working on and what's next and acquire approval before you make architectural changes
+8. During development if anything happens the results in troubleshooting and causes changes note that in the Progress.md file and what you had to do to resolve.
+9. Should anything change that affects a change in the content of docs/FLUTTER_MIGRATION_PLAN_v1_1_RIVERPOD.md and docs/FLUTTER_RIVERPOD_ARCHITECTURE_HANDOFF.md then let me know and obtain approval to update those documents.
+
+Start by reading docs/PROGRESS.md and telling me what we 
+should work on next.
