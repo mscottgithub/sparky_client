@@ -1,0 +1,20 @@
+Suggested Adjustments to the Plan
+The plan is 95% great. Here's my 5% improvement:
+1. Test Audio Latency Earlier
+Change: Don't wait until Week 2 Day 4. Test audio recording/playback in Week 1 Day 3.
+Why: Audio latency is critical for voice AI. If Flutter's audio packages have issues on Windows, you want to know ASAP, not after Week 1 is "complete."
+How: Simple test - record 2 seconds, play it back. Measure latency. If >500ms, we need to tune record package settings.
+2. Desktop Feel From Day 1
+Change: Add "Desktop UX Requirements" to Week 1.
+Must-haves:
+
+Right-click context menus
+Full keyboard shortcuts (Ctrl+C/V/X/A/Z)
+Native window decorations (title bar, minimize/maximize)
+Proper focus management (Tab key navigation)
+
+Why: If we build "mobile on desktop" for 3 weeks, then try to add desktop feel in Week 4, it'll feel bolted on.
+3. Memory Profiling in Week 2
+Change: Add explicit memory profiling task in Week 2.
+Why: Flutter can leak memory if dispose() isn't called. Catch it early.
+How: Run app for 30 min, send 100 messages. Use Flutter DevTools memory profiler.

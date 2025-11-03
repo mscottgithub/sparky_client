@@ -1,0 +1,140 @@
+import gradio as gr
+import requests
+import json
+import os
+import glob
+from datetime import datetime
+
+# Default server base — points to your hot local server
+BASE_URL = os.environ.get("HIGGS_BASE_URL", "http://127.0.0.1:8010")
+
+# Where to save WAVs (matches your preference)
+OUT_DIR = "/home/mintdude/Github/sparky/higgs"
+os.makedirs(OUT_DIR, exist_ok=True)
+
+# Fallback local discovery (only used if /voices is unavailable)
+REPO_ROOT   = "/home/mintdude/Github/sparky/higgs"
+PROMPTS_DIR = os.path.join(REPO_ROOT, "examples", "voice_prompts")
+
+def local_list_voices():
+    names = []
+    for wav in glob.glob(os.path.join(PROMPTS_DIR, "*.wav")):
+        name = os.path.splitext(os.path.basename(wav))[0]
+        names.append(name)
+    names.sort()
+    return names
+
+def fetch_server_voices():
+    """Try server /voices first; fallback to local glob."""
+    try:
+        r = requests.get(f"{BASE_URL}/voices", timeout=5)
+        if r.ok:
+            data = r.json()
+            if data.get("ok") and isinstance(data.get("voices"), list):
+                return sorted(data["voices"])
+    except Exception:
+        pass
+    return local_list_voices()
+
+def build_voice_choices(voices):
+    return ["(none)"] + voices + ["(custom wav path)"]
+
+def generate_audio(text, voice_choice, custom_wav_path, temperature, top_p, top_k, ras_win_len, filename_stub):
+    if not filename_stub:
+        filename_stub = datetime.now().strftime("higgs_%Y%m%d_%H%M%S")
+    out_path = os.path.join(OUT_DIR, f"{filename_stub}.wav")
+
+    payload = {
+        "transcript": text,
+        "out_path": out_path,
+        "temperature": float(temperature),
+        "top_p": float(top_p),
+        "top_k": int(top_k),
+        "ras_win_len": int(ras_win_len),
+        "ras_win_max_num_repeat": 2,
+        "generation_chunk_buffer_size": None,
+        "seed": None,
+    }
+
+    # Voice selection logic
+    if voice_choice == "(none)":
+        pass
+    elif voice_choice == "(custom wav path)":
+        if custom_wav_path and os.path.exists(custom_wav_path):
+            payload["ref_audio_wav_path"] = custom_wav_path
+        else:
+            return None, f"Custom WAV not found: {custom_wav_path}", json.dumps(payload, indent=2)
+    else:
+        payload["ref_audio"] = voice_choice  # server will look in examples/voice_prompts/<name>.wav
+
+    url = f"{BASE_URL}/generate"
+    prompt_str = json.dumps(payload, indent=2)
+
+    try:
+        r = requests.post(url, json=payload, timeout=600)
+        if r.ok:
+            data = r.json()
+            if data.get("ok"):
+                return data.get("out_path", out_path), "OK", prompt_str
+            else:
+                err = data.get("error", "Unknown error")
+                tb  = data.get("traceback", "")
+                return None, f"Server error: {err}\n{tb}", prompt_str
+        else:
+            return None, f"HTTP {r.status_code}: {r.text}", prompt_str
+    except Exception as e:
+        return None, f"Connection error: {e}", prompt_str
+
+def refresh_voices():
+    voices = fetch_server_voices()
+    return gr.update(choices=build_voice_choices(voices), value="(none)"), f"Found {len(voices)} voices"
+
+with gr.Blocks(title="Higgs Audio 2 — Local Test UI") as demo:
+    gr.Markdown("## 🎤 Higgs Audio 2 — Local Test UI\nSend text to your **local** server on `127.0.0.1:8010` and play the WAVs saved into your Higgs repo folder.")
+
+    # Initial dynamic voices
+    initial_voices = fetch_server_voices()
+    initial_choices = build_voice_choices(initial_voices)
+
+    with gr.Row():
+        text_input = gr.Textbox(label="Text to Speak", lines=3, placeholder="Type something to speak...")
+
+    with gr.Row():
+        voice_dropdown = gr.Dropdown(choices=initial_choices, value="(none)", label="Reference Voice")
+        custom_wav     = gr.Textbox(label="Custom WAV Path (only if 'custom wav' selected)", placeholder="/full/path/to/your.wav")
+
+    with gr.Row():
+        temperature = gr.Slider(0.1, 1.5, value=1.0, step=0.05, label="Temperature")
+        top_p       = gr.Slider(0.1, 1.0, value=0.95, step=0.01, label="Top-p")
+        top_k       = gr.Slider(1, 200, value=50, step=1, label="Top-k")
+        ras_win_len = gr.Slider(0, 20, value=7, step=1, label="RAS window length (0 = off)")
+
+    with gr.Row():
+        filename_stub = gr.Textbox(label="Output filename (no .wav)", placeholder="higgs_test")
+
+    with gr.Row():
+        generate_btn = gr.Button("Generate & Play", variant="primary")
+        refresh_btn  = gr.Button("Refresh Voices")
+
+    with gr.Row():
+        audio_output   = gr.Audio(label="Generated Audio", type="filepath")
+    with gr.Row():
+        status_msg     = gr.Textbox(label="Status", interactive=False)
+        prompt_display = gr.Textbox(label="JSON Sent to Server", interactive=False, lines=16)
+
+    generate_btn.click(
+        fn=generate_audio,
+        inputs=[text_input, voice_dropdown, custom_wav, temperature, top_p, top_k, ras_win_len, filename_stub],
+        outputs=[audio_output, status_msg, prompt_display]
+    )
+
+    refresh_btn.click(
+        fn=refresh_voices,
+        inputs=[],
+        outputs=[voice_dropdown, status_msg]
+    )
+
+    # Also refresh once on page load so it's always current
+    demo.load(fn=refresh_voices, inputs=[], outputs=[voice_dropdown, status_msg])
+
+demo.launch(server_name="0.0.0.0", server_port=7860)

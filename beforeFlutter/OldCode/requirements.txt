@@ -1,0 +1,9 @@
+requests
+sounddevice
+soundfile
+numpy
+openwakeword
+pystray
+Pillow
+pywin32
+pynput
